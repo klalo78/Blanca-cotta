@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Libro Abierto Realista</title>
+    <style>
+        body { 
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; min-height: 100vh; margin: 0; 
+            background-color: #121212; font-family: sans-serif; color: white; 
+        }
+        
+        .book-container { 
+            position: relative; width: 95vw; max-width: 1200px; 
+            height: 85vh; display: flex; justify-content: center; align-items: center; 
+        }
+
+        .sheet { 
+            position: absolute; width: 100%; height: 100%; 
+            display: none; justify-content: center; align-items: center; 
+            /* Quitamos el gap para que se peguen */
+            gap: 0; 
+        }
+
+        .sheet.active { display: flex; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Estilo general de las imágenes */
+        .sheet img { 
+            max-height: 100%; 
+            width: auto; 
+            max-width: 50%; /* Cada una ocupa la mitad exacta */
+            object-fit: contain; 
+            background: #000;
+            display: block;
+        }
+
+        /* Efecto de "Lomo" del libro (pliegue central) */
+        /* Imagen de la izquierda */
+        .sheet:not(.single) img:first-child {
+            border-radius: 10px 0 0 10px;
+            box-shadow: inset -15px 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Imagen de la derecha */
+        .sheet:not(.single) img:last-child {
+            border-radius: 0 10px 10px 0;
+            box-shadow: inset 15px 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Portada y Contraportada (solas) */
+        .sheet.single img { 
+            max-width: 70%; 
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+
+        .controls { margin-top: 15px; display: flex; align-items: center; gap: 20px; z-index: 10; }
+        
+        button { 
+            padding: 10px 25px; cursor: pointer; background: #333; 
+            color: white; border: 1px solid #555; border-radius: 5px; 
+            font-size: 16px; transition: 0.3s; 
+        }
+        
+        button:hover:not(:disabled) { background: #e74c3c; border-color: #e74c3c; }
+        button:disabled { opacity: 0.1; cursor: not-allowed; }
+        #page-info { font-family: monospace; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="book-container" id="book">
+        </div>
+
+    <div class="controls">
+        <button id="prevBtn" onclick="changeSheet(-1)">Anterior</button>
+        <span id="page-info">Cargando...</span>
+        <button id="nextBtn" onclick="changeSheet(1)">Siguiente</button>
+    </div>
+
+    <script>
+        const totalImages = 36; 
+        const book = document.getElementById('book');
+        
+        function generateBook() {
+            // Portada
+            createSheet(['01'], true);
+
+            // Páginas Interiores (del 2 al 35)
+            for (let i = 2; i <= 34; i += 2) {
+                let img1 = i.toString().padStart(2, '0');
+                let img2 = (i + 1).toString().padStart(2, '0');
+                createSheet([img1, img2], false);
+            }
+
+            // Contraportada
+            createSheet(['36'], true);
+        }
+
+        function createSheet(imgNames, isSingle) {
+            const div = document.createElement('div');
+            div.className = 'sheet' + (isSingle ? ' single' : '');
+            
+            imgNames.forEach(name => {
+                const img = document.createElement('img');
+                img.src = `imagenes/${name}.jpg`; 
+                img.onerror = function() {
+                    this.style.display = "none"; // Oculta si no existe para no romper el diseño
+                    console.error("No encontrada: " + name);
+                };
+                div.appendChild(img);
+            });
+            book.appendChild(div);
+        }
+
+        let currentIdx = 0;
+
+        function updateUI() {
+            const allSheets = document.querySelectorAll('.sheet');
+            allSheets.forEach((sheet, index) => {
+                sheet.classList.toggle('active', index === currentIdx);
+            });
+            document.getElementById('prevBtn').disabled = (currentIdx === 0);
+            document.getElementById('nextBtn').disabled = (currentIdx === allSheets.length - 1);
+            document.getElementById('page-info').innerText = `Pliego ${currentIdx + 1} de ${allSheets.length}`;
+        }
+
+        function changeSheet(dir) {
+            currentIdx += dir;
+            updateUI();
+        }
+
+        generateBook();
+        updateUI();
+    </script>
+</body>
+</html>
