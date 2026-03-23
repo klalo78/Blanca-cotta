@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Libro Abierto Realista</title>
+    <title>Libro Digital - GitHub Ready</title>
     <style>
         body { 
             display: flex; flex-direction: column; justify-content: center; 
@@ -18,7 +18,6 @@
         .sheet { 
             position: absolute; width: 100%; height: 100%; 
             display: none; justify-content: center; align-items: center; 
-            /* Quitamos el gap para que se peguen */
             gap: 0; 
         }
 
@@ -26,30 +25,26 @@
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Estilo general de las imágenes */
         .sheet img { 
             max-height: 100%; 
             width: auto; 
-            max-width: 50%; /* Cada una ocupa la mitad exacta */
+            max-width: 50%; 
             object-fit: contain; 
             background: #000;
             display: block;
         }
 
-        /* Efecto de "Lomo" del libro (pliegue central) */
-        /* Imagen de la izquierda */
+        /* Efecto de lomo central */
         .sheet:not(.single) img:first-child {
             border-radius: 10px 0 0 10px;
             box-shadow: inset -15px 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.3);
         }
 
-        /* Imagen de la derecha */
         .sheet:not(.single) img:last-child {
             border-radius: 0 10px 10px 0;
             box-shadow: inset 15px 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.3);
         }
 
-        /* Portada y Contraportada (solas) */
         .sheet.single img { 
             max-width: 70%; 
             border-radius: 10px;
@@ -83,19 +78,20 @@
     <script>
         const totalImages = 36; 
         const book = document.getElementById('book');
-        
+        const nombreCarpeta = "imagenes"; // RUTA EN MINÚSCULAS
+
         function generateBook() {
-            // Portada
+            // Portada (01)
             createSheet(['01'], true);
 
-            // Páginas Interiores (del 2 al 35)
+            // Páginas Interiores (del 02 al 35)
             for (let i = 2; i <= 34; i += 2) {
                 let img1 = i.toString().padStart(2, '0');
                 let img2 = (i + 1).toString().padStart(2, '0');
                 createSheet([img1, img2], false);
             }
 
-            // Contraportada
+            // Contraportada (36)
             createSheet(['36'], true);
         }
 
@@ -105,11 +101,21 @@
             
             imgNames.forEach(name => {
                 const img = document.createElement('img');
-                img.src = `imagenes/${name}.jpg`; 
+                
+                // Intento inicial con .jpg minúscula
+                img.src = `${nombreCarpeta}/${name}.jpg`; 
+                
+                // Si falla (por ejemplo si en GitHub es .JPG), intenta la otra
                 img.onerror = function() {
-                    this.style.display = "none"; // Oculta si no existe para no romper el diseño
-                    console.error("No encontrada: " + name);
+                    if (!this.triedOther) {
+                        this.triedOther = true;
+                        this.src = `${nombreCarpeta}/${name}.JPG`;
+                    } else {
+                        console.error("No se encontró el archivo: " + name);
+                        this.style.display = "none";
+                    }
                 };
+                
                 div.appendChild(img);
             });
             book.appendChild(div);
